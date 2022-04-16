@@ -18,7 +18,7 @@ version="0.4.0"
 progname=`basename $0`
 
 function show_usage {
-  cat << EOU
+    cat << EOU
 Usage: ${progname} [OPTION]... FILE...
 
 Move files into the trash.
@@ -34,8 +34,8 @@ EOU
 }
 
 function try_help {
-  echo "Try \`${progname} -h' for more information." 1>&2
-  exit 1
+    echo "Try \`${progname} -h' for more information." 1>&2
+    exit 1
 }
 
 # sed script to encode filenames
@@ -71,160 +71,160 @@ s/~/%7e/g
 s/	/%09/g'
 
 function url_encode {
-  echo $1 |sed -e "$sedscript"
+    echo $1 |sed -e "$sedscript"
 }
 
 function get_trashdir {
-  mounts=`awk '{ print $2 }' /proc/mounts`
-  base=/
+    mounts=`awk '{ print $2 }' /proc/mounts`
+    base=/
 
-  if [ "$EUID" != "0" ]; then
-    mounts="$HOME $mounts"
-  fi
-
-  for i in $mounts
-  do
-    if [[ $1 =~ ^$i ]]
-    then
-      if [[ $i =~ ^$base ]]
-      then
-        base=$i
-      fi
-    fi
-  done
-
-  if [ "$base" != "$HOME" ]; then
-    trashdir="$base/.Trash/$UID"
-    if [ ! -d "$trashdir" ]; then
-      trashdir="$base/.Trash-$UID"
+    if [ "$EUID" != "0" ]; then
+        mounts="$HOME $mounts"
     fi
 
-    mkdir -p "$trashdir"
-    if [ "$?" != "0" ]; then
-      base=$HOME
-    fi
-  fi
+    for i in $mounts
+    do
+        if [[ $1 =~ ^$i ]]
+        then
+            if [[ $i =~ ^$base ]]
+            then
+                base=$i
+            fi
+        fi
+    done
 
-  if [ "$base" == "$HOME" ]; then
-    base=$XDG_DATA_HOME
-    if [ -z "$base" ]; then
-      base="$HOME/.local/share/"
-    fi
-    trashdir="$base/Trash"
-  fi
+    if [ "$base" != "$HOME" ]; then
+        trashdir="$base/.Trash/$UID"
+        if [ ! -d "$trashdir" ]; then
+            trashdir="$base/.Trash-$UID"
+        fi
 
-  echo $trashdir
+        mkdir -p "$trashdir"
+        if [ "$?" != "0" ]; then
+            base=$HOME
+        fi
+    fi
+
+    if [ "$base" == "$HOME" ]; then
+        base=$XDG_DATA_HOME
+        if [ -z "$base" ]; then
+            base="$HOME/.local/share/"
+        fi
+        trashdir="$base/Trash"
+    fi
+
+    echo $trashdir
 }
 
 function can_trash {
-  filename="$1"
+    filename="$1"
 
-  if [ ! -e "$filename" ]; then
-    if [ "$interactive" != "force" ]; then
-      echo "${progname}: cannot move \`$filename' to trash: No such file or directory" 1>&2
-    fi
-    echo 0
-  else
-
-    type="file"
-    if [ -d "$filename" ]; then
-      type="directory"
-    fi
-
-    case $interactive in
-      never|force) echo 1 ;;
-      always)
-        read -p "${progname}: move ${type} '${filename}' to trash?" yn
-        if [[ "$yn" =~ ^[yY]$ ]]; then
-          echo 1
-        else
-          echo 0
+    if [ ! -e "$filename" ]; then
+        if [ "$interactive" != "force" ]; then
+            echo "${progname}: cannot move \`$filename' to trash: No such file or directory" 1>&2
         fi
-        ;;
-      *) echo "${progname}: unsupported value interactive=${interactive}" 1>&2 ; echo 0; exit 1 ;;
-    esac
-  fi
+        echo 0
+    else
+
+        type="file"
+        if [ -d "$filename" ]; then
+            type="directory"
+        fi
+
+        case $interactive in
+            never|force) echo 1 ;;
+            always)
+                read -p "${progname}: move ${type} '${filename}' to trash?" yn
+                if [[ "$yn" =~ ^[yY]$ ]]; then
+                    echo 1
+                else
+                    echo 0
+                fi
+                ;;
+            *) echo "${progname}: unsupported value interactive=${interactive}" 1>&2 ; echo 0; exit 1 ;;
+        esac
+    fi
 }
 
 function init_trashdir {
-  trashdir=$1
+    trashdir=$1
 
-  mkdir -p "$trashdir/files"
-  if [ "$?" != "0" ]; then
-    echo "${progname}: unable to write to $trashdir" 1>&2
-    exit 2
-  fi
+    mkdir -p "$trashdir/files"
+    if [ "$?" != "0" ]; then
+        echo "${progname}: unable to write to $trashdir" 1>&2
+        exit 2
+    fi
 
-  mkdir -p "$trashdir/info"
-  if [ "$?" != "0" ]; then
-    echo "${progname}: unable to write to $trashdir" 1>&2
-    exit 2
-  fi
+    mkdir -p "$trashdir/info"
+    if [ "$?" != "0" ]; then
+        echo "${progname}: unable to write to $trashdir" 1>&2
+        exit 2
+    fi
 }
 
 function trash_file {
-  filename=$1
+    filename=$1
 
-  dir=${filename%/*}
+    dir=${filename%/*}
 
-  trashdir=`get_trashdir "$dir"`
-  init_trashdir "$trashdir"
+    trashdir=`get_trashdir "$dir"`
+    init_trashdir "$trashdir"
 
-  trashname="${filename##*/}"
-  origname="${trashname%%.*}"
-  if [ -z "${origname}" ]; then
-      origname="dotfile"
-  fi
-  ext=".${trashname##*.}"
-  if [ "$ext" == ".$trashname" ]; then
-    ext=""
-  fi
+    trashname="${filename##*/}"
+    origname="${trashname%%.*}"
+    if [ -z "${origname}" ]; then
+        origname="dotfile"
+    fi
+    ext=".${trashname##*.}"
+    if [ "$ext" == ".$trashname" ]; then
+        ext=""
+    fi
 
-  # Use -u (unsafe) option because we cannot mv a directory into a
-  # file.  This is technically "unsafe" but mv will ask for
-  # confirmation when overwriting.
+    # Use -u (unsafe) option because we cannot mv a directory into a
+    # file.  This is technically "unsafe" but mv will ask for
+    # confirmation when overwriting.
 
-  deletedfile=$(mktemp -u "${trashdir}/files/${origname}_XXXXXXXX" )$ext
-  deletedbase=$( basename "${deletedfile}" )
-  deletedinfo="$trashdir/info/${deletedbase}.trashinfo"
+    deletedfile=$(mktemp -u "${trashdir}/files/${origname}_XXXXXXXX" )$ext
+    deletedbase=$( basename "${deletedfile}" )
+    deletedinfo="$trashdir/info/${deletedbase}.trashinfo"
 
-  canon=`url_encode "$filename"`
+    canon=`url_encode "$filename"`
 
-  cat > "$deletedinfo" <<END
+    cat > "$deletedinfo" <<END
 [Trash Info]
 Path=$canon
 DeletionDate=`date +"%FT%H:%M:%S"`
 END
 
-  if [ $verbose != 0 ]; then
-      mv_opts="-v"
-  else
-      mv_opts=
-  fi
+    if [ $verbose != 0 ]; then
+        mv_opts="-v"
+    else
+        mv_opts=
+    fi
 
-  # Note that the trashinfo file will have the ownership and
-  # permissions of the person who deleted the file, and not
-  # necessarily of the original file.
+    # Note that the trashinfo file will have the ownership and
+    # permissions of the person who deleted the file, and not
+    # necessarily of the original file.
 
-  mv $mv_opts "${filename}" "${deletedfile}"
-  if [ "$?" != "0" ]; then
-    echo "${progname}: unable to move ${filename} to ${deletedfile}" 1>&2
-    rm "$deletedinfo"
-    exit 2
-  fi
+    mv $mv_opts "${filename}" "${deletedfile}"
+    if [ "$?" != "0" ]; then
+        echo "${progname}: unable to move ${filename} to ${deletedfile}" 1>&2
+        rm "$deletedinfo"
+        exit 2
+    fi
 }
 
 # Option handling
 
 function strip_quotes {
-  x="$1"
-  x="${x#\'}"
-  x="${x%\'}"
-  echo "${x}"
+    x="$1"
+    x="${x#\'}"
+    x="${x%\'}"
+    echo "${x}"
 }
 
 if [ $# -eq 0 ]; then
-  try_help
+    try_help
 fi
 
 verbose=0
@@ -233,20 +233,20 @@ filename=
 
 while getopts hvirRf arg; do
     case $arg in
-	h) show_usage;
-	    exit 1
-	    ;;
-	i) interactive=always
-	    ;;
-	v) verbose=1
-	    ;;
-	r|R)
-	    ;;
-	f) interactive=force
-	    ;;
-	[?]) try_help
-	    exit 1
-	    ;;
+        h) show_usage;
+            exit 1
+            ;;
+        i) interactive=always
+            ;;
+        v) verbose=1
+            ;;
+        r|R)
+            ;;
+        f) interactive=force
+            ;;
+        [?]) try_help
+            exit 1
+            ;;
     esac
 done
 
@@ -254,20 +254,15 @@ shift $(( OPTIND - 1))
 
 for f in "$@"; do
 
-  # get full pathname of file
+    # get full pathname of file
 
-  filename="$(readlink -f "${f}")"
+    filename="$(readlink -f "${f}")"
 
-  yes=`can_trash "$filename"`
-  if [ "$yes" != "0" ]; then
-    trash_file "$filename"
-  fi
+    yes=`can_trash "$filename"`
+    if [ "$yes" != "0" ]; then
+        trash_file "$filename"
+    fi
 
 done
 
 exit 0
-
-
-
-
-
