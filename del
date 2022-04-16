@@ -15,7 +15,7 @@
 
 version="0.4.0"
 
-progname=`basename $0`
+progname=$(basename $0)
 
 function show_usage {
     cat << EOU
@@ -75,7 +75,7 @@ function url_encode {
 }
 
 function get_trashdir {
-    mounts=`awk '{ print $2 }' /proc/mounts`
+    mounts=$(awk '{ print $2 }' /proc/mounts)
     base=/
 
     if [ "$EUID" != "0" ]; then
@@ -164,7 +164,7 @@ function trash_file {
 
     dir=${filename%/*}
 
-    trashdir=`get_trashdir "$dir"`
+    trashdir=$(get_trashdir "$dir")
     init_trashdir "$trashdir"
 
     trashname="${filename##*/}"
@@ -185,12 +185,12 @@ function trash_file {
     deletedbase=$(basename "${deletedfile}")
     deletedinfo="$trashdir/info/${deletedbase}.trashinfo"
 
-    canon=`url_encode "$filename"`
+    canon=$(url_encode "$filename")
 
     cat > "$deletedinfo" << END
 [Trash Info]
 Path=$canon
-DeletionDate=`date +"%FT%H:%M:%S"`
+DeletionDate=$(date +"%FT%H:%M:%S")
 END
 
     if [ $verbose != 0 ]; then
@@ -244,7 +244,7 @@ shift $((OPTIND - 1))
 for f in "$@"; do
     filename="$(readlink -f "${f}")" # get full pathname of file
 
-    yes=`can_trash "$filename"`
+    yes=$(can_trash "$filename")
     if [ "$yes" != "0" ]; then
         trash_file "$filename"
     fi
