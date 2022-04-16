@@ -1,5 +1,6 @@
-bashtrash - a bash-shell implementation of the Freedesktop.org
-            trashcan specification.
+shellDel
+========
+A shell implementation of the Freedesktop.org trashcan specification
 
 ```
 Usage: del [OPTION]... FILE...
