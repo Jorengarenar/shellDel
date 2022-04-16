@@ -15,7 +15,7 @@
 
 version="0.4.0"
 
-progname=$(basename $0)
+progname="$(basename $0)"
 
 function show_usage {
     cat << EOU
@@ -75,8 +75,8 @@ function url_encode {
 }
 
 function get_trashdir {
-    mounts=$(awk '{ print $2 }' /proc/mounts)
-    base=/
+    mounts="$(awk '{ print $2 }' /proc/mounts)"
+    base="/"
 
     if [ "$EUID" != "0" ]; then
         mounts="$HOME $mounts"
@@ -85,7 +85,7 @@ function get_trashdir {
     for i in $mounts; do
         if [[ $1 =~ ^$i ]]; then
             if [[ $i =~ ^$base ]]; then
-                base=$i
+                base="$i"
             fi
         fi
     done
@@ -98,12 +98,12 @@ function get_trashdir {
 
         mkdir -p "$trashdir"
         if [ "$?" != "0" ]; then
-            base=$HOME
+            base="$HOME"
         fi
     fi
 
     if [ "$base" == "$HOME" ]; then
-        base=$XDG_DATA_HOME
+        base="$XDG_DATA_HOME"
         if [ -z "$base" ]; then
             base="$HOME/.local/share/"
         fi
@@ -160,11 +160,11 @@ function init_trashdir {
 }
 
 function trash_file {
-    filename=$1
+    filename="$1"
 
-    dir=${filename%/*}
+    dir="${filename%/*}"
 
-    trashdir=$(get_trashdir "$dir")
+    trashdir="$(get_trashdir "$dir")"
     init_trashdir "$trashdir"
 
     trashname="${filename##*/}"
@@ -181,11 +181,11 @@ function trash_file {
     # file.  This is technically "unsafe" but mv will ask for
     # confirmation when overwriting.
 
-    deletedfile=$(mktemp -u "${trashdir}/files/${origname}_XXXXXXXX" )$ext
-    deletedbase=$(basename "${deletedfile}")
+    deletedfile="$(mktemp -u "${trashdir}/files/${origname}_XXXXXXXX" )$ext"
+    deletedbase="$(basename "${deletedfile}")"
     deletedinfo="$trashdir/info/${deletedbase}.trashinfo"
 
-    canon=$(url_encode "$filename")
+    canon="$(url_encode "$filename")"
 
     cat > "$deletedinfo" << END
 [Trash Info]
@@ -193,7 +193,7 @@ Path=$canon
 DeletionDate=$(date +"%FT%H:%M:%S")
 END
 
-    if [ $verbose != 0 ]; then
+    if [ "$verbose" != 0 ]; then
         mv_opts="-v"
     else
         mv_opts=
@@ -225,16 +225,16 @@ if [ $# -eq 0 ]; then
 fi
 
 verbose=0
-interactive=never
+interactive="never"
 filename=
 
 while getopts hvirRf arg; do
     case $arg in
         h)   show_usage; exit 1 ;;
-        i)   interactive=always ;;
+        i)   interactive="always" ;;
         v)   verbose=1 ;;
         r|R) ;;
-        f)   interactive=force ;;
+        f)   interactive="force" ;;
         [?]) try_help; exit 1 ;;
     esac
 done
@@ -244,7 +244,7 @@ shift $((OPTIND - 1))
 for f in "$@"; do
     filename="$(readlink -f "${f}")" # get full pathname of file
 
-    yes=$(can_trash "$filename")
+    yes="$(can_trash "$filename")"
     if [ "$yes" != "0" ]; then
         trash_file "$filename"
     fi
