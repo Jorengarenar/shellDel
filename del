@@ -24,6 +24,9 @@ Options:
   -i		prompt before moving every file
   -r, -R	ignored (for compatability with rm)
   -f		ignore non-existent files, never prompt
+
+You can set trash directory location with WASTEBASKET environment variable:
+  export WASTEBASKET="/tmp/Trash"
 EOU
 }
 
@@ -66,6 +69,11 @@ encode() {
 
 get_trashdir() {
     dir="$1"
+
+    if [ -n "$WASTEBASKET" ]; then
+        echo "$WASTEBASKET"
+        return
+    fi
 
     mounts="$(awk '{ print $2 }' /proc/mounts)"
     base="/"
@@ -148,10 +156,9 @@ Path=$(encode "$filename")
 DeletionDate=$(date +"%FT%H:%M:%S")
 END
 
+    mv_opts=
     if [ "$verbose" != 0 ]; then
         mv_opts="-v"
-    else
-        mv_opts=
     fi
 
     # Note that the trashinfo file will have the ownership and

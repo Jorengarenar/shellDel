@@ -14,6 +14,9 @@ Options:
   -i		prompt before moving every file
   -r, -R	ignored (for compatability with rm)
   -f		ignore non-existent files, never prompt
+
+You can set trash directory location with WASTEBASKET environment variable:
+  export WASTEBASKET="/tmp/Trash"
 ```
 
 ---
