@@ -4,7 +4,7 @@
 #   Copyright (c) 2009-2011  Robert Rothenberg <robrwo@gmail.com>
 #   Copyright (c)      2022       Jorengarenar <dev@joren.ga>
 
-version="0.5.0"
+version="0.5.1"
 
 progname="$(basename $0)"
 
