@@ -102,39 +102,6 @@ get_trashdir() {
     echo "$trashdir"
 }
 
-can_trash() {
-    filename="$1"
-
-    if [ ! -e "$filename" ]; then
-        if [ "$interactive" != "force" ]; then
-            echo "${progname}: cannot move \`$filename' to trash: No such file or directory" 1>&2
-        fi
-        return 1
-    else
-        type="file"
-        if [ -d "$filename" ]; then
-            type="directory"
-        fi
-
-        case $interactive in
-            never|force) ;;
-            always)
-                read -p "${progname}: move ${type} '${filename}' to trash? [y/N]" yn
-                case "$yn" in
-                    y|Y|yes) ;;
-                    *) return 1 ;;
-                esac
-                ;;
-            *)
-                echo "${progname}: unsupported value interactive=${interactive}" 1>&2
-                exit 1
-                ;;
-        esac
-    fi
-
-    return 0
-}
-
 init_trashdir() {
     trashdir="$1"
 
@@ -197,6 +164,39 @@ END
         rm "$deletedinfo"
         exit 2
     fi
+}
+
+can_trash() {
+    filename="$1"
+
+    if [ ! -e "$filename" ]; then
+        if [ "$interactive" != "force" ]; then
+            echo "${progname}: cannot move \`$filename' to trash: No such file or directory" 1>&2
+        fi
+        return 1
+    else
+        type="file"
+        if [ -d "$filename" ]; then
+            type="directory"
+        fi
+
+        case $interactive in
+            never|force) ;;
+            always)
+                read -p "${progname}: move ${type} '${filename}' to trash? [y/N]" yn
+                case "$yn" in
+                    y|Y|yes) ;;
+                    *) return 1 ;;
+                esac
+                ;;
+            *)
+                echo "${progname}: unsupported value interactive=${interactive}" 1>&2
+                exit 1
+                ;;
+        esac
+    fi
+
+    return 0
 }
 
 # main {{{
