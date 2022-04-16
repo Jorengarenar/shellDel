@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 # Copyright (c) 2009-2011, Robert Rothenberg <robrwo@gmail.com>
 # Copyright (c)      2022,      Jorengarenar <dev@joren.ga>
@@ -16,6 +16,9 @@
 version="0.4.0"
 
 progname="$(basename $0)"
+
+verbose=0
+interactive="never"
 
 usage() {
     cat << EOU
@@ -38,7 +41,7 @@ try_help() {
     exit 1
 }
 
-url_encode() {
+encode() {
     echo "$1" | sed -e 's/ /%20/g
         s/!/%21/g
         s/"/%22/g
@@ -71,6 +74,8 @@ url_encode() {
 }
 
 get_trashdir() {
+    dir="$1"
+
     mounts="$(awk '{ print $2 }' /proc/mounts)"
     base="/"
 
@@ -78,10 +83,10 @@ get_trashdir() {
         mounts="$HOME $mounts"
     fi
 
-    for i in $mounts; do
-        if [[ $1 =~ ^$i ]]; then
-            if [[ $i =~ ^$base ]]; then
-                base="$i"
+    for mnt in $mounts; do
+        if [ -z "${dir##$mnt*}" ]; then
+            if [ -z "${mnt##$base*}" ]; then
+                base="$mnt"
             fi
         fi
     done
@@ -99,14 +104,11 @@ get_trashdir() {
     fi
 
     if [ "$base" == "$HOME" ]; then
-        base="$XDG_DATA_HOME"
-        if [ -z "$base" ]; then
-            base="$HOME/.local/share/"
-        fi
+        base="${XDG_DATA_HOME:-$HOME/.local/share}"
         trashdir="$base/Trash"
     fi
 
-    echo $trashdir
+    echo "$trashdir"
 }
 
 can_trash() {
@@ -116,27 +118,30 @@ can_trash() {
         if [ "$interactive" != "force" ]; then
             echo "${progname}: cannot move \`$filename' to trash: No such file or directory" 1>&2
         fi
-        echo 0
+        return 1
     else
-
         type="file"
         if [ -d "$filename" ]; then
             type="directory"
         fi
 
         case $interactive in
-            never|force) echo 1 ;;
+            never|force) ;;
             always)
-                read -p "${progname}: move ${type} '${filename}' to trash?" yn
-                if [[ "$yn" =~ ^[yY]$ ]]; then
-                    echo 1
-                else
-                    echo 0
-                fi
+                read -p "${progname}: move ${type} '${filename}' to trash? [y/N]" yn
+                case "$yn" in
+                    y|Y|yes) ;;
+                    *) return 1 ;;
+                esac
                 ;;
-            *) echo "${progname}: unsupported value interactive=${interactive}" 1>&2 ; echo 0; exit 1 ;;
+            *)
+                echo "${progname}: unsupported value interactive=${interactive}" 1>&2
+                exit 1
+                ;;
         esac
     fi
+
+    return 0
 }
 
 init_trashdir() {
@@ -173,19 +178,15 @@ trash_file() {
         ext=""
     fi
 
-    # Use -u (unsafe) option because we cannot mv a directory into a
-    # file.  This is technically "unsafe" but mv will ask for
-    # confirmation when overwriting.
-
+    # Use -u (unsafe) option because we cannot mv a directory into a file.
+    #   This is technically "unsafe" but mv will ask for confirmation when overwriting.
     deletedfile="$(mktemp -u "${trashdir}/files/${origname}_XXXXXXXX" )$ext"
     deletedbase="$(basename "${deletedfile}")"
     deletedinfo="$trashdir/info/${deletedbase}.trashinfo"
 
-    canon="$(url_encode "$filename")"
-
     cat > "$deletedinfo" << END
 [Trash Info]
-Path=$canon
+Path=$(encode "$filename")
 DeletionDate=$(date +"%FT%H:%M:%S")
 END
 
@@ -207,13 +208,11 @@ END
     fi
 }
 
+# main {{{
+
 if [ $# -eq 0 ]; then
     try_help
 fi
-
-verbose=0
-interactive="never"
-filename=
 
 while getopts hvirRf arg; do
     case $arg in
@@ -225,15 +224,15 @@ while getopts hvirRf arg; do
         [?]) try_help; exit 1 ;;
     esac
 done
-
 shift $((OPTIND - 1))
 
 for f in "$@"; do
     filename="$(realpath -s "${f}")" # get full pathname of file
-    yes=$(can_trash "$filename")
-    if [ "$yes" != "0" ]; then
+    if can_trash "$filename"; then
         trash_file "$filename"
     fi
 done
 
 exit 0
+
+# main }}}
