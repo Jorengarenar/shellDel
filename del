@@ -71,7 +71,7 @@ s/~/%7e/g
 s/	/%09/g'
 
 function url_encode {
-    echo $1 |sed -e "$sedscript"
+    echo $1 | sed -e "$sedscript"
 }
 
 function get_trashdir {
@@ -82,12 +82,9 @@ function get_trashdir {
         mounts="$HOME $mounts"
     fi
 
-    for i in $mounts
-    do
-        if [[ $1 =~ ^$i ]]
-        then
-            if [[ $i =~ ^$base ]]
-            then
+    for i in $mounts; do
+        if [[ $1 =~ ^$i ]]; then
+            if [[ $i =~ ^$base ]]; then
                 base=$i
             fi
         fi
@@ -185,12 +182,12 @@ function trash_file {
     # confirmation when overwriting.
 
     deletedfile=$(mktemp -u "${trashdir}/files/${origname}_XXXXXXXX" )$ext
-    deletedbase=$( basename "${deletedfile}" )
+    deletedbase=$(basename "${deletedfile}")
     deletedinfo="$trashdir/info/${deletedbase}.trashinfo"
 
     canon=`url_encode "$filename"`
 
-    cat > "$deletedinfo" <<END
+    cat > "$deletedinfo" << END
 [Trash Info]
 Path=$canon
 DeletionDate=`date +"%FT%H:%M:%S"`
@@ -233,36 +230,24 @@ filename=
 
 while getopts hvirRf arg; do
     case $arg in
-        h) show_usage;
-            exit 1
-            ;;
-        i) interactive=always
-            ;;
-        v) verbose=1
-            ;;
-        r|R)
-            ;;
-        f) interactive=force
-            ;;
-        [?]) try_help
-            exit 1
-            ;;
+        h)   show_usage; exit 1 ;;
+        i)   interactive=always ;;
+        v)   verbose=1 ;;
+        r|R) ;;
+        f)   interactive=force ;;
+        [?]) try_help; exit 1 ;;
     esac
 done
 
-shift $(( OPTIND - 1))
+shift $((OPTIND - 1))
 
 for f in "$@"; do
-
-    # get full pathname of file
-
-    filename="$(readlink -f "${f}")"
+    filename="$(readlink -f "${f}")" # get full pathname of file
 
     yes=`can_trash "$filename"`
     if [ "$yes" != "0" ]; then
         trash_file "$filename"
     fi
-
 done
 
 exit 0
