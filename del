@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# bashtrash - a bash script implementation of the FreeDesktop.org Trash
-# Specification.
-
 # Copyright (c) 2009-2011, Robert Rothenberg <robrwo@gmail.com>
+# Copyright (c)      2022,      Jorengarenar <dev@joren.ga>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
