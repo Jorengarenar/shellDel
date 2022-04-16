@@ -2,7 +2,7 @@ bashtrash - a bash-shell implementation of the Freedesktop.org
             trashcan specification.
 
 ```
-Usage: trash [OPTION]... FILE...
+Usage: del [OPTION]... FILE...
 
 Move files into the trash.
 
